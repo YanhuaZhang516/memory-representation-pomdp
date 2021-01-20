@@ -29,7 +29,7 @@ There are 9 different observations:
 
         return: the index of obs(in the range of (0,8))
 
-### 2. [gridworldRNN](https://github.com/YanhuaZhang516/memory-representation-pomdp/blob/main/gym_test/gridworld2.py)
+### 2. [gridworldRNN](https://github.com/YanhuaZhang516/memory-representation-pomdp/blob/main/gym_test/gridworldRNN.py)
 (the child class from GridWorldEnvNew)
 
 It includes two environments, both are used for POMDP.
