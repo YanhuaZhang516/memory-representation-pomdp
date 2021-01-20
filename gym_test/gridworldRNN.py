@@ -1,6 +1,6 @@
 from gridworld2 import *
 
-class GridWorldEnvRnn(GridWorldEnvNew,gym.Wrapper):
+class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
     def __init__(self, n_width, n_height, u_size, default_type, max_episode_steps,default_reward):
 
         super(GridWorldEnvRnn, self).__init__(n_width=n_width,
