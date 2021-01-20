@@ -35,7 +35,7 @@ There are 9 different observations:
 It includes two environments, both are used for POMDP.
 - **GridWorldEnvRnn(POMDP)**  
 **observation_space** = spaces.MultiDiscrete(9,4)  
-**reward function**： L1-norm 
+**reward function**： L1-norm   
 "9" is for the number of observations; "4" is the number of actions
 
 - **GridWorldEnvRnnNew(POMDP)**  
