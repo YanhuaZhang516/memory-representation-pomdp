@@ -1,7 +1,7 @@
 # memory-representation-pomdp
 
 ## 1. [The Enviroment](https://github.com/YanhuaZhang516/memory-representation-pomdp/tree/main/gym_test)
-### 1. gridworld2.py
+### 1. [gridworld2.py](https://github.com/YanhuaZhang516/memory-representation-pomdp/blob/main/gym_test/gridworld2.py)
 It includes two environments:  
 - **GridWorldEnv(MDP)**  
 **observation_space** = spaces.Discrete(self.n_height * self.n_width)  
@@ -29,7 +29,7 @@ There are 9 different observations:
 
         return: the index of obs(in the range of (0,8))
 
-### 2. gridworldRNN 
+### 2. [gridworldRNN](https://github.com/YanhuaZhang516/memory-representation-pomdp/blob/main/gym_test/gridworld2.py)
 (the child class from GridWorldEnvNew)
 
 It includes two environments, both are used for POMDP.
