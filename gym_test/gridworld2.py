@@ -385,7 +385,8 @@ class GridWorldEnv(gym.Env):
 
             # 更新个体位置
         x, y = self._state_to_xy(self.state)
-        self.agent_trans.set_translation((x + 0.5) * u_size, (y + 0.5) * u_size)
+
+        self.agent_trans.set_translation((x-1+0.5 ) * u_size, (y -1+0.5) * u_size)
 
         return self.viewer.render(return_rgb_array=mode == 'rgb_array')
 
@@ -565,13 +566,14 @@ class GridWorldEnvNew(GridWorldEnv):
         # 绘制格子
         for x in range(self.n_width):
             for y in range(self.n_height):
+
                 v = [(x * u_size + m, y * u_size + m),
                      ((x + 1) * u_size - m, y * u_size + m),
                      ((x + 1) * u_size - m, (y + 1) * u_size - m),
                      (x * u_size + m, (y + 1) * u_size - m)]
 
                 rect = rendering.FilledPolygon(v)
-                r = self.grids.get_reward(x, y) / 10
+                r = self.grids.get_reward(x+1, y+1) / 10
                 if r < 0:
                     rect.set_color(0.9 - r, 0.9 + r, 0.9 + r)
                 elif r > 0:
@@ -601,7 +603,7 @@ class GridWorldEnvNew(GridWorldEnv):
                 obs_outline = rendering.make_polygon(v_obs_outline, False)
                 obs_outline.set_linewidth(3)
 
-                if self._is_end_state(x, y):
+                if self._is_end_state(x+1, y+1):
                     # 给终点方格添加金黄色边框
                     outline.set_color(0.9, 0.9, 0)
                     obs_outline.set_color(0.9, 0.9, 0)
@@ -609,7 +611,7 @@ class GridWorldEnvNew(GridWorldEnv):
                     self.viewer.add_geom(obs_outline)
 
 
-                if x == 1 and y == 1:
+                if self.start[0] == (x+1) and self.start[1] == (y+1):
                     # 添加起始点方格
                     outline.set_color(0.5, 0.5, 0.8)
                     self.viewer.add_geom(outline)
@@ -617,7 +619,7 @@ class GridWorldEnvNew(GridWorldEnv):
                     obs_outline.set_color(0.5, 0.5, 0.8)
                     self.viewer.add_geom(obs_outline)
 
-                if self.grids.get_type(x, y) == 1:  # 障碍格子用深灰色表示
+                if self.grids.get_type(x+1, y+1) == 1:  # 障碍格子用深灰色表示
                     rect.set_color(0.3, 0.3, 0.3)
                 else:
                     pass
@@ -640,7 +642,7 @@ class GridWorldEnvNew(GridWorldEnv):
 
         # update the position of agent
         x, y = self._state_to_xy(self.state)
-        self.agent_obs_trans.set_translation( (x -1) * u_size, (y -1)  * u_size)
+        self.agent_obs_trans.set_translation( (x-1 -1) * u_size, (y-1 -1)  * u_size)
 
 
         # 绘制圆心
@@ -666,7 +668,7 @@ class GridWorldEnvNew(GridWorldEnv):
         for i in range(num_episodes):
             episode_rewards = []
             done = False
-            obs = env.reset()
+            obs = env.reset
             while not done:
                 # _states are only useful when using LSTM policies
                 action, _states = model.predict(obs)
@@ -683,42 +685,44 @@ class GridWorldEnvNew(GridWorldEnv):
 
 if __name__ == "__main__":
 
-    env2 = GridWorldEnvNew(n_width=7, n_height=7, u_size=60, default_reward=-1, default_type=0, max_episode_steps=100)
-    env2.start = (2, 2)
-    env2.end = (5,5)
-    # give special reward to the specific grid
-
-    env2.grids.set_reward(env2.end[0], env2.end[1], 0)
+    # env2 = GridWorldEnvNew(n_width=7, n_height=7, u_size=60, default_reward=-1, default_type=0, max_episode_steps=100)
+    # env2.start = (2, 2)
+    # env2.end = (6,6)
+    # # give special reward to the specific grid
+    #
+    # env2.grids.set_reward(env2.end[0], env2.end[1], 0)
 
 
     #env2.refresh_setting()
 
-    print(env2.observation)
+
 
 
     # ### set another enviroment
-    # env1 = GridWorldEnv(n_width=7, n_height=7, u_size=60, default_reward=-1, default_type=0)
-    # env1.start = (2, 2)
-    # env1.end = (5,5 )
-    # env1.grids.set_reward(env1.end[0], env1.end[1], 0)
-    # env1.refresh_setting()
-
+    env1 = GridWorldEnv(n_width=7, n_height=7, u_size=60, default_reward=-1, default_type=0)
+    env1.start = (2, 2)
+    env1.end = (6,6 )
+    env1.grids.set_reward(env1.end[0], env1.end[1], 0)
+    env1.refresh_setting()
 
     def test_render(env):
         start_time = time.time()
         for _ in range(1000):
-            #env.render()
+            env.render()
             # take a random action
             a = env.action_space.sample()
             state, reward, isdone, info = env.step(a)
-            print("{0}, {1}, {2},{3}".format(state, a, reward, isdone))
-            print(info["state"])
+            time.sleep(0.2)
+
+            #print("{0}, {1}, {2},{3}".format(state, a, reward, isdone))
+            #print(info["state"])
+
         print('render close')
         end_time = time.time()
         return end_time-start_time
 
 
-    process_time2 = test_render(env2)
+    process_time2 = test_render(env1)
 
     #print("the time for model1 is {}, the time for model2 is {}".format(process_time1, process_time2))
 

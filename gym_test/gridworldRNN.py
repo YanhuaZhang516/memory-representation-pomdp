@@ -16,8 +16,8 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         self.observation = None
         self.input = None
         self.state = None
-
-        self.observation_space = spaces.MultiDiscrete([9, 4])
+        # first is action, second is observation
+        self.observation_space = spaces.MultiDiscrete([4, 9])
 
         self.start = (2, 2)
         self.end = (5, 5)
@@ -96,7 +96,7 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         self.observation = self._xy_to_obs(new_x, new_y)
         self.state = self._xy_to_state(new_x, new_y)
         # change the whole observation part
-        self.input = np.asarray([self.observation, self.action], np.int64)
+        self.input = np.asarray([self.action, self.observation], np.int64)
 
         # reward for the state(obs)
         self.reward = self.get_reward(new_x, new_y)
@@ -105,7 +105,7 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         done = self._is_end_state(new_x, new_y)
 
         # 提供格子所在信息
-        info = {"x": new_x, "y": new_y, "grids": self.grids, "TimeLimit.truncated": False}
+        info = {"x": new_x, "y": new_y, "state":self.state,"grids": self.grids, "TimeLimit.truncated": False}
 
         self._elapsed_steps += 1
 
@@ -122,8 +122,8 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         self.action = 0
         self._elapsed_steps = 0
         # Todo
-        self.input = np.asarray([self.observation, self.action], np.int64)
-        return self.input
+        self.input = np.asarray([self.action, self.observation], np.int64)
+        return self.input, self.state
 
 class GridWorldEnvRnnNew(GridWorldEnvRnn):
     def __init__(self, n_width, n_height, u_size, default_type, max_episode_steps,default_reward,num_obs):
@@ -252,26 +252,36 @@ class GridWorldEnvRnnNew(GridWorldEnvRnn):
 
 
 if __name__ == "__main__":
-    env = GridWorldEnvRnnNew(n_width=7, n_height=7, u_size=60, default_type=0,
-                             max_episode_steps=200, default_reward=-1, num_obs=4)
+    # env = GridWorldEnvRnnNew(n_width=7, n_height=7, u_size=60, default_type=0,
+    #                          max_episode_steps=200, default_reward=-1, num_obs=4)
+    env = GridWorldEnvRnn(n_width=7, n_height=7, u_size=60, default_type=0, max_episode_steps=100,default_reward=-1)
 
     env.start=(2,2)
     env.end = (5,5)
     env.refresh_setting()
 
-    obs = env.reset()
+    initial_obs, initial_state = env.reset()
+
     #env.print_obs()
+    list1=[initial_obs]
+    list_s=[initial_state]
 
     start = time.time()
     for _ in range(250):
 
-        a  = env.action_space.sample()
-        obs,reward,isdone,info = env.step(a)
-        print("{0},{1},{2},{3}".format(obs, a, reward, isdone))
+        a = env.action_space.sample()
+        obs, reward, isdone, info = env.step(a)
+        #print("{0},{1},{2},{3}".format(obs, a, reward, isdone))
+        list1.append(obs)
+        list_s.append(info["state"])
+        print("[action,observation] for {} is {}".format(_+1, obs))
+        print("state is:",info["state"])
 
         if isdone == True:
             print(info["TimeLimit.truncated"])
     end = time.time()
+    print(list1[0][0])
+    print(len(list_s))
 
     print("the process time is:", end-start)
 
