@@ -20,7 +20,7 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         self.observation_space = spaces.MultiDiscrete([4, 9])
 
         self.start = (2, 2)
-        self.end = (5, 5)
+        self.end = (5, 6)
 
         # find the largest distance between the state and the end state for normalization:
         n_width_max = max([np.abs(i+2 - self.end[0]) for i in range(self.n_width-2)])
@@ -58,16 +58,78 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         return reward
 
 
+    def _xy_to_obs_matrix(self, x, y=None):
+        """
+        we set 8 different states here:
+        0: the default grid
+        1: the wall grid
+        state[0]: [0 0 0 , 0 0 0, 0 0 0]
+        state[1]: [0 0 1, 0 0 1, 0 0 1]
+        state[2]: [0 0 1, 0 0 1, 1 1 1]
+        state[3]: [0 0 0, 0 0 0, 1 1 1]
+        state[4]: [1 0 0, 1 0 0, 1 1 1]
+        state[5]: [1 0 0, 1 0 0, 1 0 0]
+        state[6]: [1 1 1, 1 0 0 , 1 0 0]
+        state[7]：[1 1 1, 0 0 0, 0 0 0]
+        state[8]: [1 1 1, 0 0 1, 0 0 1]
+
+        return: the index of new states(in the range of (0,8))
+
+        """
+        s0 = list(np.zeros((9, )))
+        s1 = [0, 0, 1,
+              0, 0, 1,
+              0, 0, 1]
+        s2 = [0, 0, 1,
+              0, 0, 1,
+              1, 1, 1]
+        s3 = [0, 0, 0,
+              0, 0, 0,
+              1, 1, 1]
+        s4 = [1, 0, 0,
+              1, 0, 0,
+              1, 1, 1]  # the initial state (1,1)
+        s5 = [1, 0, 0,
+              1, 0, 0,
+              1, 0, 0]
+        s6 = [1, 1, 1,
+              1, 0, 0,
+              1, 0, 0]
+        s7 = [1, 1, 1,
+              0, 0, 0,
+              0, 0, 0]
+        s8 = [1, 1, 1,
+              0, 0, 1,
+              0, 0, 1]
+        s = [s0, s1, s2, s3, s4, s5, s6, s7, s8]
+
+        if isinstance(x, int):
+            assert (isinstance(y, int)),"complete position info"
+            xx, yy = x, y
+        elif isinstance(x, tuple):
+            xx, yy = x[0], x[1]
+
+        states = np.zeros((9,))
+        for i in range(3):
+            for j in range(3):
+                states[i*3+j] = self.grids.get_type(xx - 1 + j, yy + 1 - i)
+        states = list(states)
+        # print("the states is:", states)
+        return states
+
+
+
     def step(self,action):
         assert self._elapsed_steps is not None, "cannot call env.step() before calling reset() "
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         ## to do the step part
         # add some noise here
-        r = random()
-        if r <= 0.2:
-            self.action = self.action_space.sample()
-        else:
-            self.action = action  # action for rendering
+        #r = random()
+        # if r <= 0.2:
+        #     self.action = self.action_space.sample()
+        # else:
+        #     self.action = action  # action for rendering
+        self.action = action
         #  the env store the internal state
         old_x, old_y = self._state_to_xy(self.state)
         new_x, new_y = old_x, old_y
@@ -95,6 +157,9 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         # 修改状态，观测值
         self.observation = self._xy_to_obs(new_x, new_y)
         self.state = self._xy_to_state(new_x, new_y)
+        obs_matrix = self._xy_to_obs_matrix(new_x, new_y)
+        # print("position is :", (new_x, new_y))
+        # print("the state is:", self.state)
         # change the whole observation part
         self.input = np.asarray([self.action, self.observation], np.int64)
 
@@ -105,7 +170,7 @@ class GridWorldEnvRnn(GridWorldEnvNew, gym.Wrapper):
         done = self._is_end_state(new_x, new_y)
 
         # 提供格子所在信息
-        info = {"x": new_x, "y": new_y, "state":self.state,"grids": self.grids, "TimeLimit.truncated": False}
+        info = {"x": new_x, "y": new_y, "state":self.state,"grids": self.grids, "TimeLimit.truncated": False, "obs_matrix":obs_matrix}
 
         self._elapsed_steps += 1
 
@@ -168,11 +233,12 @@ class GridWorldEnvRnnNew(GridWorldEnvRnn):
         assert self.action_space.contains(action), "%r (%s) invalid" % (action, type(action))
         ## to do the step part
         # add some noise here
-        r = random()
-        if r <= 0.2:
-            self.action = self.action_space.sample()
-        else:
-            self.action = action  # action for rendering
+        #r = random()
+        # if r <= 0.2:
+        #     self.action = self.action_space.sample()
+        # else:
+        #     self.action = action  # action for rendering
+        self.action = action
         #  the env store the internal state
         old_x, old_y = self._state_to_xy(self.state)
         new_x, new_y = old_x, old_y
@@ -199,6 +265,7 @@ class GridWorldEnvRnnNew(GridWorldEnvRnn):
 
         # 修改状态，观测值
         self.observation = self._xy_to_obs(new_x, new_y)
+
         #print("the new obs:", self.observation)
         # store the new observation to the list
         self.obs_list.insert(0, self.obs_list.pop())
@@ -254,17 +321,17 @@ class GridWorldEnvRnnNew(GridWorldEnvRnn):
 if __name__ == "__main__":
     # env = GridWorldEnvRnnNew(n_width=7, n_height=7, u_size=60, default_type=0,
     #                          max_episode_steps=200, default_reward=-1, num_obs=4)
-    env = GridWorldEnvRnn(n_width=7, n_height=7, u_size=60, default_type=0, max_episode_steps=100,default_reward=-1)
+    env = GridWorldEnvRnn(n_width=10, n_height=10, u_size=60, default_type=0, max_episode_steps=100, default_reward=-1)
 
-    env.start=(2,2)
-    env.end = (5,5)
+    env.start = (2, 2)
+    env.end = (5, 6)
     env.refresh_setting()
 
     initial_obs, initial_state = env.reset()
 
     #env.print_obs()
-    list1=[initial_obs]
-    list_s=[initial_state]
+    list1 = [initial_obs]
+    list_s = [initial_state]
 
     start = time.time()
     for _ in range(250):
@@ -276,6 +343,8 @@ if __name__ == "__main__":
         list_s.append(info["state"])
         print("[action,observation] for {} is {}".format(_+1, obs))
         print("state is:",info["state"])
+        print("observation is:", obs[1])
+        print("matrix is:",info["obs_matrix"])
 
         if isdone == True:
             print(info["TimeLimit.truncated"])
